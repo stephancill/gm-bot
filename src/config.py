@@ -14,6 +14,7 @@ def get_env_value(env_variable, default=None):
 
 BOT_TOKEN = get_env_value("BOT_TOKEN")
 CHANNEL_ID = get_env_value("CHANNEL_ID")
+PERSISTENCE_PATH = get_env_value("PERSISTENCE_PATH")
 DEBUG = get_env_value("DEBUG", "false").lower() == "true"
 APP_URL = get_env_value("APP_URL")
 PORT = get_env_value("PORT")

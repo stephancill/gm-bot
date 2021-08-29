@@ -14,9 +14,10 @@ bot.
 """
 
 import config
+import datetime
 import logging
-from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, PicklePersistence
 
 # Enable logging
 logging.basicConfig(
@@ -49,21 +50,30 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         # 1. Forward a gm message
         # 2. Forward this message to channel
         # 3. Store message and chat id
-        channel = context.bot.get_chat(config.CHANNEL_ID)
         chat_id = update.message.chat_id
-        
-        last_from_chat_id = 176900492
-        last_message_id = 14122
-        if channel.pinned_message:
-            last_from_chat_id = channel.id
-            last_message_id = channel.pinned_message.message_id
-        
+
+        last_gm = context.user_data.get("last_gm")
+        time_now = datetime.datetime.utcnow()
+        if last_gm:
+            delta: datetime.timedelta = time_now - last_gm
+            if delta < datetime.timedelta(hours=12):
+                update.message.reply_text("Yeah yeah gm")
+                return
+
+        context.user_data["last_gm"] = time_now
+
+        last_from_chat_id = context.bot_data.get("last_from_chat_id", 176900492)
+        last_message_id = context.bot_data.get("last_message_id", 14122)
+
         context.bot.forward_message(chat_id, last_from_chat_id, last_message_id)
         
         this_chat_id = update.message.chat_id
         this_message_id = update.message.message_id
-        channel_message = context.bot.forward_message(config.CHANNEL_ID, this_chat_id, this_message_id)
-        channel.pin_message(channel_message.message_id)
+
+        context.bot_data["last_from_chat_id"] = this_chat_id
+        context.bot_data["last_message_id"] = this_message_id
+        
+        context.bot.forward_message(config.CHANNEL_ID, this_chat_id, this_message_id)
     else:
         update.message.reply_text("That isn't a gm message 🤔")
 
@@ -71,7 +81,8 @@ def handle_message(update: Update, context: CallbackContext) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(config.BOT_TOKEN)
+    persistence = PicklePersistence(config.PERSISTENCE_PATH)
+    updater = Updater(config.BOT_TOKEN, persistence=persistence, use_context=True)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
