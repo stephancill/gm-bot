@@ -62,10 +62,13 @@ def handle_message(update: Update, context: CallbackContext) -> None:
 
         context.user_data["last_gm"] = time_now
 
-        last_from_chat_id = context.bot_data.get("last_from_chat_id", 176900492)
-        last_message_id = context.bot_data.get("last_message_id", 14122)
+        last_from_chat_id = context.bot_data.get("last_from_chat_id")
+        last_message_id = context.bot_data.get("last_message_id")
 
-        context.bot.forward_message(chat_id, last_from_chat_id, last_message_id)
+        if last_from_chat_id and last_message_id:
+            context.bot.forward_message(chat_id, last_from_chat_id, last_message_id)
+        else:
+            update.message.reply_text("gm! 💫")
         
         this_chat_id = update.message.chat_id
         this_message_id = update.message.message_id
