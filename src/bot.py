@@ -57,7 +57,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         if last_gm:
             delta: datetime.timedelta = time_now - last_gm
             if delta < datetime.timedelta(hours=12):
-                update.message.reply_text("Yeah yeah gm")
+                update.message.reply_text("gm! 💫")
                 return
 
         context.user_data["last_gm"] = time_now
